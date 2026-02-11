@@ -7,6 +7,9 @@ import dotenv from "dotenv";
 import { db } from "./db/index.js";
 import { users } from "./db/schema.js";
 
+import authRoutes from "./routes/auth.routes.js";
+import cookieParser from "cookie-parser";
+
 // Cargar variables de entorno
 dotenv.config();
 
@@ -20,12 +23,19 @@ app.use(helmet());
 
 // 2. CORS: Permite que tu Frontend (que estará en otro puerto/dominio) se conecte aquí.
 // Por ahora lo dejamos abierto ('*'), luego lo restringiremos a tu dominio real.
-app.use(cors());
+app.use(
+  cors({
+    origin: "http://localhost:3000", // El puerto del Frontend
+    credentials: true, // Permite cookies
+  }),
+);
 
 // 3. JSON Parser: Permite que tu app entienda datos en formato JSON (lo que envía el front).
 app.use(express.json());
+app.use(cookieParser());
 
 // --- RUTAS ---
+app.use("/api/auth", authRoutes);
 
 // Health Check: Una ruta simple para ver si el servidor está vivo.
 app.get("/api/health", (req: Request, res: Response) => {
