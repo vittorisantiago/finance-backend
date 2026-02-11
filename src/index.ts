@@ -8,6 +8,7 @@ import { db } from "./db/index.js";
 import { users } from "./db/schema.js";
 
 import authRoutes from "./routes/auth.routes.js";
+import dashboardRoutes from "./routes/dashboard.routes.js";
 import cookieParser from "cookie-parser";
 
 // Cargar variables de entorno
@@ -36,6 +37,7 @@ app.use(cookieParser());
 
 // --- RUTAS ---
 app.use("/api/auth", authRoutes);
+app.use("/api/dashboard", dashboardRoutes);
 
 // Health Check: Una ruta simple para ver si el servidor está vivo.
 app.get("/api/health", (req: Request, res: Response) => {
