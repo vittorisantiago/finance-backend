@@ -60,10 +60,24 @@ export const transactions = pgTable("transactions", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
+// TABLA DE NOTIFICACIONES
+export const notifications = pgTable("notifications", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  userId: uuid("user_id")
+    .references(() => users.id)
+    .notNull(),
+  title: text("title").notNull(),
+  message: text("message").notNull(),
+  type: text("type").notNull().default("info"), // 'info', 'success', 'warning', 'error'
+  isRead: boolean("is_read").default(false),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
 // RELACIONES (Para que Drizzle sepa navegar entre tablas)
 export const usersRelations = relations(users, ({ many }) => ({
   transactions: many(transactions),
   categories: many(categories),
+  notifications: many(notifications),
 }));
 
 export const transactionsRelations = relations(transactions, ({ one }) => ({
@@ -71,5 +85,12 @@ export const transactionsRelations = relations(transactions, ({ one }) => ({
   category: one(categories, {
     fields: [transactions.categoryId],
     references: [categories.id],
+  }),
+}));
+
+export const notificationsRelations = relations(notifications, ({ one }) => ({
+  user: one(users, {
+    fields: [notifications.userId],
+    references: [users.id],
   }),
 }));
