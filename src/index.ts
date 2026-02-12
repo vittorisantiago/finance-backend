@@ -8,7 +8,10 @@ import { db } from "./db/index.js";
 import { users } from "./db/schema.js";
 
 import authRoutes from "./routes/auth.routes.js";
+import dashboardRoutes from "./routes/dashboard.routes.js";
 import cookieParser from "cookie-parser";
+import transactionRoutes from "./routes/transactions.routes.js";
+import notificationRoutes from "./routes/notifications.routes.js";
 
 // Cargar variables de entorno
 dotenv.config();
@@ -36,6 +39,9 @@ app.use(cookieParser());
 
 // --- RUTAS ---
 app.use("/api/auth", authRoutes);
+app.use("/api/dashboard", dashboardRoutes);
+app.use("/api/transactions", transactionRoutes);
+app.use("/api/notifications", notificationRoutes);
 
 // Health Check: Una ruta simple para ver si el servidor está vivo.
 app.get("/api/health", (req: Request, res: Response) => {

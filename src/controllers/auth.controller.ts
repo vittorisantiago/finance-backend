@@ -151,6 +151,40 @@ export const logout = (req: Request, res: Response) => {
   res.json({ message: "Sesión cerrada" });
 };
 
+// Obtener usuario actual
+export const getMe = async (req: Request, res: Response) => {
+  try {
+    const userId = (req as any).user?.userId;
+
+    if (!userId) {
+      return res.status(401).json({ error: "No autorizado" });
+    }
+
+    const userResult = await db
+      .select({
+        id: users.id,
+        email: users.email,
+        fullName: users.fullName,
+        role: users.role,
+        plan: users.plan,
+        createdAt: users.createdAt,
+      })
+      .from(users)
+      .where(eq(users.id, userId));
+
+    const user = userResult[0];
+
+    if (!user) {
+      return res.status(404).json({ error: "Usuario no encontrado" });
+    }
+
+    res.json({ user });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Error al obtener usuario" });
+  }
+};
+
 // 1. SOLICITAR CAMBIO DE CONTRASEÑA
 export const requestPasswordReset = async (req: Request, res: Response) => {
   try {

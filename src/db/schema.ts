@@ -1,4 +1,13 @@
-import { pgTable, uuid, text, timestamp, boolean } from "drizzle-orm/pg-core";
+import {
+  pgTable,
+  uuid,
+  text,
+  timestamp,
+  boolean,
+  decimal,
+  date,
+} from "drizzle-orm/pg-core";
+import { relations } from "drizzle-orm";
 
 // Definimos la tabla 'users'
 export const users = pgTable("users", {
@@ -24,3 +33,64 @@ export const passwordResetTokens = pgTable("password_reset_tokens", {
   token: text("token").notNull().unique(),
   expiresAt: timestamp("expires_at").notNull(),
 });
+
+// TABLA DE CATEGORÍAS (Ej: Comida, Transporte)
+export const categories = pgTable("categories", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  name: text("name").notNull(),
+  icon: text("icon").notNull(), // Guardaremos el nombre del ícono (ej: "Pizza")
+  color: text("color").notNull(), // Ej: "#F97316" (Naranja)
+  isDefault: boolean("is_default").default(false), // Si es una categoría del sistema
+  userId: uuid("user_id").references(() => users.id), // Si es null, es global. Si tiene ID, es personalizada del usuario.
+  type: text("type").notNull().default("expense"), // 'income' o 'expense'
+});
+
+// TABLA DE TRANSACCIONES (Gastos e Ingresos)
+export const transactions = pgTable("transactions", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  userId: uuid("user_id")
+    .references(() => users.id)
+    .notNull(),
+  categoryId: uuid("category_id").references(() => categories.id),
+  amount: decimal("amount", { precision: 12, scale: 2 }).notNull(), // Soporta montos grandes
+  currency: text("currency").default("ARS").notNull(), // ARS o USD
+  date: timestamp("date").defaultNow().notNull(),
+  notes: text("notes"),
+  type: text("type").notNull(), // 'income' o 'expense'
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// TABLA DE NOTIFICACIONES
+export const notifications = pgTable("notifications", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  userId: uuid("user_id")
+    .references(() => users.id)
+    .notNull(),
+  title: text("title").notNull(),
+  message: text("message").notNull(),
+  type: text("type").notNull().default("info"), // 'info', 'success', 'warning', 'error'
+  isRead: boolean("is_read").default(false),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// RELACIONES (Para que Drizzle sepa navegar entre tablas)
+export const usersRelations = relations(users, ({ many }) => ({
+  transactions: many(transactions),
+  categories: many(categories),
+  notifications: many(notifications),
+}));
+
+export const transactionsRelations = relations(transactions, ({ one }) => ({
+  user: one(users, { fields: [transactions.userId], references: [users.id] }),
+  category: one(categories, {
+    fields: [transactions.categoryId],
+    references: [categories.id],
+  }),
+}));
+
+export const notificationsRelations = relations(notifications, ({ one }) => ({
+  user: one(users, {
+    fields: [notifications.userId],
+    references: [users.id],
+  }),
+}));
