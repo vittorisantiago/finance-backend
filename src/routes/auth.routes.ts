@@ -6,6 +6,8 @@ import {
   requestPasswordReset,
   resetPassword,
   getMe,
+  updateMe,
+  cancelSubscription,
 } from "../controllers/auth.controller.js";
 import { authenticateToken } from "../middlewares/auth.middleware.js";
 
@@ -20,5 +22,11 @@ router.post("/reset-password", resetPassword);
 
 // GET
 router.get("/me", authenticateToken, getMe);
+
+// PATCH
+router.patch("/me", authenticateToken, updateMe);
+
+// POST
+router.post("/cancel-subscription", authenticateToken, cancelSubscription);
 
 export default router;
