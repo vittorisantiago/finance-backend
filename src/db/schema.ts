@@ -73,11 +73,32 @@ export const notifications = pgTable("notifications", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
+// TABLA DE PRESUPUESTOS (BUDGETS)
+export const budgets = pgTable("budgets", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  userId: uuid("user_id")
+    .references(() => users.id)
+    .notNull(),
+  categoryId: uuid("category_id").references(() => categories.id),
+  limit: decimal("limit", { precision: 12, scale: 2 }).notNull(),
+  spent: decimal("spent", { precision: 12, scale: 2 }).default("0"),
+  period: text("period").notNull().default("monthly"), // 'weekly', 'monthly', 'yearly'
+  month: text("month"), // 'YYYY-MM' para presupuestos mensuales
+  alertPercentage: decimal("alert_percentage", {
+    precision: 5,
+    scale: 2,
+  }).default("80"), // Porcentaje para alerta
+  isActive: boolean("is_active").default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
 // RELACIONES (Para que Drizzle sepa navegar entre tablas)
 export const usersRelations = relations(users, ({ many }) => ({
   transactions: many(transactions),
   categories: many(categories),
   notifications: many(notifications),
+  budgets: many(budgets),
 }));
 
 export const transactionsRelations = relations(transactions, ({ one }) => ({
