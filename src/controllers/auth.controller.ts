@@ -185,6 +185,87 @@ export const getMe = async (req: Request, res: Response) => {
   }
 };
 
+const updateMeSchema = z.object({
+  fullName: z
+    .string()
+    .max(80, { message: "El nombre es demasiado largo" })
+    .optional()
+    .transform((val) => (typeof val === "string" ? val.trim() : val)),
+});
+
+export const updateMe = async (req: Request, res: Response) => {
+  try {
+    const userId = (req as any).user?.userId as string | undefined;
+    if (!userId) return res.status(401).json({ error: "No autorizado" });
+
+    const validation = updateMeSchema.safeParse(req.body);
+    if (!validation.success) {
+      return res.status(400).json({
+        error: "Datos inválidos",
+        details: validation.error.issues,
+      });
+    }
+
+    const { fullName } = validation.data;
+    const nextFullName = fullName === "" ? null : fullName;
+
+    const updated = await db
+      .update(users)
+      .set({
+        fullName: nextFullName,
+        updatedAt: new Date(),
+      })
+      .where(eq(users.id, userId))
+      .returning({
+        id: users.id,
+        email: users.email,
+        fullName: users.fullName,
+        role: users.role,
+        plan: users.plan,
+        createdAt: users.createdAt,
+      });
+
+    const user = updated[0];
+    if (!user) return res.status(404).json({ error: "Usuario no encontrado" });
+
+    res.json({ user });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Error al actualizar usuario" });
+  }
+};
+
+export const cancelSubscription = async (req: Request, res: Response) => {
+  try {
+    const userId = (req as any).user?.userId as string | undefined;
+    if (!userId) return res.status(401).json({ error: "No autorizado" });
+
+    const updated = await db
+      .update(users)
+      .set({
+        plan: "free",
+        updatedAt: new Date(),
+      })
+      .where(eq(users.id, userId))
+      .returning({
+        id: users.id,
+        email: users.email,
+        fullName: users.fullName,
+        role: users.role,
+        plan: users.plan,
+        createdAt: users.createdAt,
+      });
+
+    const user = updated[0];
+    if (!user) return res.status(404).json({ error: "Usuario no encontrado" });
+
+    res.json({ user });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Error al cancelar suscripción" });
+  }
+};
+
 // 1. SOLICITAR CAMBIO DE CONTRASEÑA
 export const requestPasswordReset = async (req: Request, res: Response) => {
   try {
